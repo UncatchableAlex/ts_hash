@@ -29,6 +29,40 @@ void* threadwork(void* args) {
 	return NULL;
 }
 
+int n = 1000;
+void *massPut(void *start) {
+	int startInt = *((int*)start);
+//	printf("%d\n", startInt);
+	for (int i = startInt; i < startInt+n; i++) {
+		put(map, i, i);
+	}
+	return NULL;
+}
+void *massGet(void *start) {
+	int startInt = *((int*)start);
+	for (int i = startInt; i < startInt+n; i++) {
+		int res = get(map, i);
+		if (res != i) {
+			printf("%d  %d\n", i ,res);
+		}
+	}
+	return NULL;
+}
+
+
+void *massDel(void *start) {
+	int startInt = *((int*)start);
+	for (int i = startInt; i < startInt+n; i++) {
+		int res = del(map, i);
+		if (res != i) {
+			printf("%d  %d\n", i ,res);
+		}
+	}
+	return NULL;
+}
+
+
+
 /**
  * Main function
  * (DO NOT MODIFY WHEN SUBMITTING FINAL VERSION)
@@ -50,7 +84,7 @@ int main(int argc, char *argv[]) {
 
 	// start clocking!
 	startTime = rtclock();
-
+/*
 	// spawn threads
 	pthread_t *threads = (pthread_t*) malloc(sizeof(pthread_t) * num_threads);
 	for (int i = 0; i < num_threads; i++) {
@@ -75,4 +109,69 @@ int main(int argc, char *argv[]) {
 	printf("Time per op   = %.6f ms\n", (double)(endTime-startTime)/map->numOps*1000);
 	freeMap(map);
 	return 0;
+	
+
+	map = initmap(capacity);*/
+	n = (60000/num_threads);
+	
+	// start clocking!
+	startTime = rtclock();
+	// spawn threads
+	pthread_t *threads = (pthread_t*) malloc(sizeof(pthread_t) * num_threads);
+	int *initialValues = malloc(sizeof(int) * num_threads);
+	for (int i = 0; i < num_threads; i++) {
+		initialValues[i] = i*n;
+		pthread_create(&threads[i], NULL, massPut, initialValues + i);
+	}
+
+	// join threads
+	for (int i = 0; i < num_threads; i++) {
+		pthread_join(threads[i], NULL);
+	}
+	printf("size: %d\n", map->size);
+
+
+	for (int i = 0; i < num_threads; i++) {
+		initialValues[i] = i*n;
+		pthread_create(&threads[i], NULL, massPut, initialValues + i);
+	}
+	// join threads
+	for (int i = 0; i < num_threads; i++) {
+		pthread_join(threads[i], NULL);
+	}
+
+	printf("size: %d\n", map->size);
+
+	for (int i = 0; i < num_threads; i++) {
+		initialValues[i] = i*n;
+		pthread_create(&threads[i], NULL, massGet, initialValues + i);
+	}
+
+	// join threads
+	for (int i = 0; i < num_threads; i++) {
+		pthread_join(threads[i], NULL);
+	}
+
+	
+	for (int i = 0; i < num_threads; i++) {
+		initialValues[i] = i*n;
+		pthread_create(&threads[i], NULL, massDel, initialValues + i);
+	}
+
+	// join threads
+	for (int i = 0; i < num_threads; i++) {
+		pthread_join(threads[i], NULL);
+	}
+	
+	// end clocking!
+	endTime = rtclock();
+
+//	printmap(map);
+	printf("Number of ops = %d, time elapsed = %.6f sec\n", map->numOps, (endTime-startTime));
+	printf("Time per op   = %.6f ms\n", (double)(endTime-startTime)/map->numOps*1000);
+	printf("Size of map: %d\n", map->size);
+	//printmap(map);
+	freeMap(map);
+	free(threads);
+	free(initialValues);
 }
