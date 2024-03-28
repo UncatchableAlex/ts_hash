@@ -281,6 +281,7 @@ void rehash(ts_hashmap_t *map) {
   // iterate through each bucket, free up all nodes
   for (int i = 0; i < map->capacity; i++) {
     ts_entry_t *currEntry = (map->table)[i];
+    free(currEntry);
     pthread_mutex_destroy(map->bucketLocks[i]);
     free(map->bucketLocks[i]);
   }
